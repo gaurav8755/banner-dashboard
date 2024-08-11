@@ -5,35 +5,44 @@ import { useEffect, useState } from 'react';
 const Banner = ({ data }) => {
     const [timeRemaining, setTimeRemaining] = useState(data.timer);
     const [endTime, setEndTime] = useState(null);
+    const [shouldShowBanner, setShouldShowBanner] = useState(false);
 
     useEffect(() => {
-        if (data.is_visible && data.timer > 0) {
-            const newEndTime = Date.now() + data.timer * 1000;
+        if (data.is_visible) {
+            // Calculate endTime when the banner is visible and timer is set
+            const newEndTime = Date.now() + (data.timer * 1000);
             setEndTime(newEndTime);
             setTimeRemaining(data.timer);
+            setShouldShowBanner(true);
         } else {
-            setTimeRemaining(0);
+            setShouldShowBanner(false);
         }
     }, [data]);
 
     useEffect(() => {
-        if (endTime) {
+        if (shouldShowBanner && endTime) {
             const interval = setInterval(() => {
                 const now = Date.now();
                 const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
                 setTimeRemaining(remaining);
 
                 if (remaining <= 0) {
+                    setShouldShowBanner(false);
                     clearInterval(interval);
                 }
             }, 1000);
 
             return () => clearInterval(interval);
         }
-    }, [endTime]);
+    }, [shouldShowBanner, endTime]);
+
+    // Hide the banner when timeRemaining is 0
+    if (!shouldShowBanner) {
+        return null;
+    }
 
     return (
-        <div className={`p-4 text-center ${data.is_visible ? 'block' : 'hidden'} bg-blue-500 text-white`}>
+        <div className={`p-4 text-center bg-blue-500 text-white`}>
             <h1 className="text-2xl font-bold">{data.description}</h1>
             <p className="mt-2 text-xl">
                 {timeRemaining > 0 ? `${timeRemaining} seconds remaining` : 'Time is up!'}
